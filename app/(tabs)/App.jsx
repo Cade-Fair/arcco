@@ -1,3 +1,11 @@
+// import{image} from 'expo-image';
+// import { Platform,styleSheet}from 'react-native';
+// import{ThemedText} from '@components/ThemedText'
+// import ParallaxScrollView from '@/components/parallax-ScrollView';
+// import{ThemedView} from '@components/ThemedView';
+// import{IconSymbol} from ' @/components/ui/icon-symbol';
+// import{fonts} from '@constant/theme';
+// import { ActivityIndicator, Animated, Modal, ScrollView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View}  from 'react-native-web';
 // all nesscsary imports for UI and frontend 
 
 
