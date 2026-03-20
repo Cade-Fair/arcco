@@ -170,3 +170,83 @@ function computeSuggestions(history, schedule, allowEarlyLate = false) {
   suggestions.sort((a, b) => b.score - a.score);
   return suggestions;
 }
+
+// diffrent sections of the arc
+const Arc_sections = [{
+name: "ARC", locations: [
+    "ARC Floor 1", "ARC Floor2", "ARC Olympic Gym", "ARC Courts"],},]
+
+//layout
+const styles = StyleSheet.create({
+    container:{
+        flex: 1, backgroundColor: "#000105",
+    },
+    header:{
+        borderBottomWidth: 1
+        borderBottomColor "rgba(255,255,255,0.05)",
+        paddingHorizontal: 16,
+        paddingTop: Platform.OS === "ios" ? 56 :40,
+        paddingBottom: 12
+    },
+    Barsize:{
+        flexDirection: "row",
+        borderTopWidth :1
+        borderTopColor "rgba(255,255,255,0.05)",
+        backgroundColor #080b15, 
+        paddingBottom: Platform.OS === "ios" ? 24: 8
+    },
+    tabs{
+        flex: 1
+        alignItems: "center",
+        paddingTop: 10,
+        paddingBottom: 4,
+        position: "relative",
+    },
+    sched:{
+        paddingVertical: 5,
+        paddingHorizontal: 14,
+        borderRadius: 8,
+        backgroundColor: "rgba(255,255,255,0.01)"
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.05"
+    },
+    sched2: {
+        backgroundColor: "rgba(255,255,255,0.05)"
+        borderColor: "rgba(251, 191, 36,.3)",
+    },
+    overlays:{
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        justifyContent: "flex-end",
+    },
+    card:{
+        backgroundColor: "#0a0f1b"
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.05)",
+        border
+    },
+    header:{
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: 18,
+        borderBottomWidth: 1,
+        borderBottomColor: "rgba(255,255,255,0.05)",
+    },
+    primaryHeader:{
+    paddingVertical: 7, 
+    paddingHorizontal: 16,
+    borderRadius: 8, 
+    backgroundColor : "rgba(49, 189, 249, 0.04)"
+    borderWidth: 1
+    borderColor:  "rgba(49, 189, 249, 0.04)"
+},
+secondHeader:{
+    paddingVertical: 7, 
+    paddingHorizontal:20,
+    borderRadius: 8
+    backgroundColor: "rgba(49, 189, 249, 0.04)",
+    borderWidth: 1,
+    borderColor: "rgba(49, 189, 249, 0.04)"
+},
+});
