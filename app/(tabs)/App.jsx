@@ -1,3 +1,11 @@
+import{image} from 'expo-image';
+import { Platform,styleSheet}from 'react-native';
+import{ThemedText} from '@components/ThemedText'
+import ParallaxScrollView from '@/components/parallax-ScrollView';
+import{ThemedView} from '@components/ThemedView';
+import{IconSymbol} from ' @/components/ui/icon-symbol';
+import{fonts} from '@constant/theme';
+import { ActivityIndicator, Animated, Modal, ScrollView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View}  from 'react-native-web';
 // all nesscsary imports for UI and frontend 
 
 
@@ -9,7 +17,7 @@ const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday, Thursday",
         // as well as shortened nicknames 
 
 
-const Open_Hours = { 
+const Open_Hours_GYM = { 
 0:{ open: 8, close: 24},
 1:{open: 5.5, close: 25},
 2:{open: 5.5, close: 25},
@@ -21,10 +29,27 @@ const Open_Hours = {
 // sunday to monday ex 8am open on sunday close 12:00am 
 //general structure for time (ARC Only) 
 
+const Open_Hours_SS = { 
+0:{ open: "10:00 AM", close: "6:00PM"},
+1:{ open: "7:00 AM", close: "9:00PM"},
+2:{ open: "7:00 AM", close: "9:00PM"},
+3:{ open: "7:00 AM", close: "9:00PM"},
+4:{ open: "7:00 AM", close: "9:00PM"},
+5:{ open: "7:00 AM", close: "8:00PM"},
+5:{ open: "10:00 AM", close: "6:00PM"},
+};
+// sunday to monday ex 10AM open on Sunday 6pm close
+//hard coded structure for specfically the hours tab UI 
+
 const Crowd_Cntrl_Gage={
-    
+    ["Free", "#02f850"], 
+    ["Lightly occupied" "#e5e82e"],
+    ["Fairly occupied" "#f69e06"],
+    ["Heavily occupied" "#f24d06"], 
+   ["Extremely occupied " "#fd0606"]
 }
-//incomplete, but should gage the levels based on how busy
+// completed now, should display how busy the gym is alongside a corosponding color which progressvely gets more red 
+
 
 //Helper Functions
 function isArcOpen() {
@@ -34,7 +59,7 @@ function isArcOpen() {
     return h >= open && h < close;
 }
 
-// Gets crowd data percent and determines color
+// Gets crowd data (pct)=percent and determines color
 function getCrowd(pct) {
     if (pct == null)
         return {
