@@ -1,11 +1,3 @@
-import{image} from 'expo-image';
-import { Platform,styleSheet}from 'react-native';
-import{ThemedText} from '@components/ThemedText'
-import ParallaxScrollView from '@/components/parallax-ScrollView';
-import{ThemedView} from '@components/ThemedView';
-import{IconSymbol} from ' @/components/ui/icon-symbol';
-import{fonts} from '@constant/theme';
-import { ActivityIndicator, Animated, Modal, ScrollView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View}  from 'react-native-web';
 // all nesscsary imports for UI and frontend 
 
 
@@ -41,13 +33,13 @@ const Open_Hours_SS = {
 // sunday to monday ex 10AM open on Sunday 6pm close
 //hard coded structure for specfically the hours tab UI 
 
-const Crowd_Cntrl_Gage={
-    ["Free", "#02f850"], 
-    ["Lightly occupied" "#e5e82e"],
-    ["Fairly occupied" "#f69e06"],
-    ["Heavily occupied" "#f24d06"], 
-   ["Extremely occupied " "#fd0606"]
-}
+const Crowd_Cntrl_Gage= [
+    ["Free", "#02f850"],
+    ["Lightly Occupied", "#e5e82e"],
+    ["Fairly Occupied", "#f69e06"],
+    ["Heavily Occupied", "#f24d06"], 
+    ["Extremely Occupied", "#fd0606"]
+]
 // completed now, should display how busy the gym is alongside a corosponding color which progressvely gets more red 
 
 
@@ -106,4 +98,67 @@ function getCrowd(pct) {
         bar: "#dc2626",
         bg: "rgba(255,255,255,0.75)"
     };
+}
+
+function fmtArcHour(h) {
+    if (h == null) {
+        return "-";
+    }
+    const a = h % 24;
+    const hasHalf = h % 1 === 0.5;
+    const wholeH = Math.floor(a);
+    const suffix = a >= 12 ? "PM" : "AM";
+    const display = wholeH > 12 ? wholeH - 12 : wholeH === 0 ? 12 : wholeH;
+    return `${display}${hasHalf ? ":30" : ""} ${suffix}`;
+}
+
+function fmtHour(h) {
+    if (h === 0 || h === 24) return "12 AM";
+    if (h === 12) return "12 PM";
+    return h > 12 ? `${h - 12} PM` : `${h} AM`;
+}
+
+function getTimelineSlots() {
+    const {open, close} = Open_Hours_GYM[new Date().getDay()];
+    const slots = [];
+    for (let h = Math.ceil(open); h < Math.min(close, 24); h++) slots.push(h);
+    return slots;
+}
+
+function emptySchedule() {
+    const s = {};
+    for (let d = 0; d < 7; d++) s[d] = [];
+    return s;
+}
+
+// Algorithm to suggest best times to get to ARC
+function computeSuggestions(history, schedule, allowEarlyLate = false) {
+  const suggestions = [];
+  for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+    const { open, close } = ARC_HOURS[dayIdx];
+    const arcOpen  = Math.ceil(open);
+    const arcClose = Math.min(Math.floor(close), 24);
+    const minHour  = allowEarlyLate ? arcOpen      : Math.max(arcOpen + 1, REASONABLE_START);
+    const maxHour  = allowEarlyLate ? arcClose - 1 : Math.min(arcClose - 2, REASONABLE_END);
+    for (let h = minHour; h <= maxHour; h++) {
+      const busy = (schedule[dayIdx] || []).some(b => h >= b.start && h < b.end);
+      if (busy) continue;
+      const FLOORS = ["ARC Floor 1", "ARC Floor 2"];
+      const readings = [];
+      history.forEach(({ timestamp, data }) => {
+        const d = new Date(timestamp);
+        if (d.getDay() !== dayIdx || d.getHours() !== h) return;
+        const floors = data.filter(l => FLOORS.includes(l.LocationName) && !l.IsClosed);
+        if (!floors.length) return;
+        const avg = floors.reduce((s, l) => s + (l.TotalCapacity > 0 ? (l.LastCount / l.TotalCapacity) * 100 : 0), 0) / floors.length;
+        readings.push(avg);
+      });
+      const crowdPct  = readings.length ? readings.reduce((a, b) => a + b, 0) / readings.length : null;
+      const baseScore = crowdPct !== null ? 100 - crowdPct : 50;
+      const timeBonus = (h >= 9 && h <= 11) || (h >= 14 && h <= 16) ? 5 : 0;
+      suggestions.push({ day: dayIdx, hour: h, score: baseScore + timeBonus, crowdPct, readings: readings.length });
+    }
+  }
+  suggestions.sort((a, b) => b.score - a.score);
+  return suggestions;
 }
