@@ -257,6 +257,15 @@ secondHeader:{
 },
 });
 
+function StatusScreen({ data, history, loading, error, arcOpen, schedule, setShowSchedule}) {
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    useEffect(() => {
+        if (!loading) Animated.timing(fadeAnim, {toValue: 1, duration: 450, useNativeDriver: true}).start();
+    }, [loading]);
+
+    
+}
+
 export default function APP(){
 const[history, setHistory] = useState([]);
 const arcOpen = isArcOpen();
