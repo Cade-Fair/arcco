@@ -8,6 +8,8 @@
 // import { ActivityIndicator, Animated, Modal, ScrollView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View}  from 'react-native-web';
 // all nesscsary imports for UI and frontend 
 
+import { View } from "react-native-web";
+
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday, Thursday",
     "Friday", "Saturday"];
@@ -270,3 +272,37 @@ const[schedule, setSchedule] = useState(emptySchedule);
 }
 //incomplete main app going to sleep will finish later and do more searching on best way 
 //to display
+
+// Location card bar
+function LocationCard({loc}) {
+    const pct = loc.TotalCapacity > 0 ? Math.round((loc.LastCount/loc.TotalCapacity) * 100) : 0;
+    const crowd = getCrowd(loc.isClosed ? null : pct);
+    return (
+        <View style = {{backgroundColor : loc.isClosed ? "rgba(255,255,255,0.5)" : crowd.bg, borderWidth: 1, borderColor: "rgba(0,0,0,1", borderRadius: 14, padding: 16, opacity: loc.isClosed ? 0.5 : 1, marginBottom: 8}}>
+            <View style = {{flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: loc.isClosed ? 0 : 10}}>
+                <View style = {{flex: 1, paddingRight: 8}}>
+                    <Text style = {{fontWeight: "600",fontSize: 14, color: loc.isClosed ? "#94a3b8" : "#1e293b"}}> {loc.LocationName} </Text>
+                    {loc.isClosed && <Text style = {{fontSize: 10, color: "#94a3b8", marginTop: 3}}>Closed</Text>}
+                </View>
+                {!loc.IsClosed && (
+                    <View style={{ alignItems: "flex-end" }}>
+                        <Text style={{ fontSize: 18, fontWeight: "800", color: crowd.color }}>{pct}%</Text>
+                        <Text style={{ fontSize: 10, color: crowd.color, opacity: 0.9, marginTop: 2 }}>{crowd.label}</Text>
+                    </View>
+                )}
+            </View>
+            {!loc.isClosed && (
+                <>
+                <SegmentBar pct = {pct} color={crowd.bar} height = {13}/>
+                <View style = {{flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 7}}>
+                    <View style = {{flexDirection: "row", alignItems: "center", gap: 5}}>
+                        <View style = {{width: 5, height: 5, borderRadius: 3, backgroundColor: crowd.color}} />
+                        <Text style = {{fontSize: 11, color: crowd.color, fontWeight: "500"}} > {loc.lastCount} people here</Text>
+                    </View>
+                <Text style = {{fontSize: 10, color: "#64748b"}}>cap {loc.TotalCapacity}</Text>
+                    </View>
+                </>
+            )}
+        </View>
+    );
+}
