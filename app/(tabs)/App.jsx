@@ -282,6 +282,49 @@ const[schedule, setSchedule] = useState(emptySchedule);
 //incomplete main app going to sleep will finish later and do more searching on best way 
 //to display
 
+//Starting function ScheduleModal
+function ScheduleModal({ visible, schedule, onSave, onClose, history }) {
+  // Local copy of the schedule so edits in the modal do not immediately change parent state
+  const [localSchedule,  setLocalSchedule]  = useState(() => JSON.parse(JSON.stringify(schedule)));
+
+  // Whether suggestions can include very early or very late hours
+  const [allowEarlyLate, setAllowEarlyLate] = useState(false);
+
+  // Currently selected day tab inside the schedule editor
+  const [activeDay,      setActiveDay]      = useState(new Date().getDay());
+
+  // Temporary start/end values for adding a new busy block
+  const [addStart,       setAddStart]       = useState(9);
+  const [addEnd,         setAddEnd]         = useState(10);
+
+  // Controls whether the modal shows the schedule editor or suggestion list
+  const [tab,            setTab]            = useState("schedule");
+
+  // Reset the local editable schedule every time the modal opens
+  useEffect(() => {
+    if (visible) setLocalSchedule(JSON.parse(JSON.stringify(schedule)));
+  }, [visible]);
+
+  // Compute recommendation suggestions based on history + current schedule preferences
+  const suggestions    = computeSuggestions(history, localSchedule, allowEarlyLate);
+  const topSuggestions = suggestions.slice(0, 7);
+
+  // Adds a busy block for the currently active day
+  function addBlock() {
+    if (addStart >= addEnd) return;
+
+    setLocalSchedule(prev => {
+      const next = JSON.parse(JSON.stringify(prev));
+
+      // Add the new block and keep blocks sorted by start time
+      next[activeDay] = [...(next[activeDay] || []), { start: addStart, end: addEnd }]
+        .sort((a, b) => a.start - b.start);
+
+      return next;
+    });
+}
+}
+// Pushing to github now, will finish later
 // Location card bar
 function LocationCard({loc}) {
     const pct = loc.TotalCapacity > 0 ? Math.round((loc.LastCount/loc.TotalCapacity) * 100) : 0;
