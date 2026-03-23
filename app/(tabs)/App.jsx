@@ -182,21 +182,21 @@ const styles = StyleSheet.create({
         flex: 1, backgroundColor: "#000105",
     },
     header:{
-        borderBottomWidth: 1
-        borderBottomColor "rgba(255,255,255,0.05)",
+        borderBottomWidth: 1,
+        borderBottomColor: "rgba(255,255,255,0.05)",
         paddingHorizontal: 16,
         paddingTop: Platform.OS === "ios" ? 56 :40,
         paddingBottom: 12
     },
     Barsize:{
         flexDirection: "row",
-        borderTopWidth :1
-        borderTopColor "rgba(255,255,255,0.05)",
-        backgroundColor #080b15, 
+        borderTopWidth :1,
+        borderTopColor: "rgba(255,255,255,0.05)",
+        backgroundColor: "#080b15", 
         paddingBottom: Platform.OS === "ios" ? 24: 8
     },
-    tabs{
-        flex: 1
+    tabs:{
+        flex: 1,
         alignItems: "center",
         paddingTop: 10,
         paddingBottom: 4,
@@ -206,12 +206,12 @@ const styles = StyleSheet.create({
         paddingVertical: 5,
         paddingHorizontal: 14,
         borderRadius: 8,
-        backgroundColor: "rgba(255,255,255,0.01)"
+        backgroundColor: "rgba(255,255,255,0.01)",
         borderWidth: 1,
         borderColor: "rgba(255,255,255,0.05"
     },
     sched2: {
-        backgroundColor: "rgba(255,255,255,0.05)"
+        backgroundColor: "rgba(255,255,255,0.05)",
         borderColor: "rgba(251, 191, 36,.3)",
     },
     overlays:{
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
         justifyContent: "flex-end",
     },
     card:{
-        backgroundColor: "#0a0f1b"
+        backgroundColor: "#0a0f1b",
         borderWidth: 1,
         borderColor: "rgba(255,255,255,0.05)",
         border
@@ -237,14 +237,14 @@ const styles = StyleSheet.create({
     paddingVertical: 7, 
     paddingHorizontal: 16,
     borderRadius: 8, 
-    backgroundColor : "rgba(49, 189, 249, 0.04)"
-    borderWidth: 1
+    backgroundColor : "rgba(49, 189, 249, 0.04)",
+    borderWidth: 1,
     borderColor:  "rgba(49, 189, 249, 0.04)"
 },
 secondHeader:{
     paddingVertical: 7, 
     paddingHorizontal:20,
-    borderRadius: 8
+    borderRadius: 8,
     backgroundColor: "rgba(49, 189, 249, 0.04)",
     borderWidth: 1,
     borderColor: "rgba(49, 189, 249, 0.04)"
