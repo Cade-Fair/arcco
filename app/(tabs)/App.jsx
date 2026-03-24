@@ -344,6 +344,17 @@ function StatusScreen({ data, history, loading, error, arcOpen, schedule, setSho
                 </View>
             </View>
 
+            {/* Timeline to show past data (every 5 mins)*/}
+            <View style={{ backgroundColor: "rgba(255,255,255,.02)", borderWidth: 1, borderColor: "rgba(255,255,255,.05)", borderRadius: 16, padding: 16, marginBottom: 16 }}>
+                <Text style={{ fontSize: 10, color: "#334155", letterSpacing: 1.5, marginBottom: 12, textTransform: "uppercase" }}>
+                    Today's Timeline · {history.length} Snapshot{history.length !== 1 ? "s" : ""} Collected
+                </Text>
+                <Timeline history={history} />
+                {history.length < 2 && (
+                    <Text style={{ textAlign: "center", paddingTop: 8, fontSize: 11, color: "#1e293b" }}>Timeline fills in every 5 min as you use the app</Text>
+                )}
+            </View>
+
 
         </Animated.ScrollView>
     );
