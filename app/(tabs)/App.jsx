@@ -852,3 +852,4 @@ function HoursScreen({shakeSmartHours}) {
         </ScrollView>
     )
 }
+}
