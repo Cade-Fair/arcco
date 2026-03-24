@@ -309,7 +309,7 @@ function StatusScreen({ data, history, loading, error, arcOpen, schedule, setSho
                     </View>
             )}
             
-            {/* Big meter */}
+            {/* Big meter used to display current occupancy percent or closed status*/}
             <View style={{ backgroundColor: arcOpen ? crowd.bg : "rgba(255,255,255,.02)", borderWidth: 1, borderColor: arcOpen ? crowd.color + "28" : "rgba(255,255,255,.05)", borderRadius: 20, padding: 22, marginBottom: 14 }}>
                 <View>
                     <View>
@@ -344,7 +344,7 @@ function StatusScreen({ data, history, loading, error, arcOpen, schedule, setSho
                 </View>
             </View>
 
-            
+
         </Animated.ScrollView>
     );
     
