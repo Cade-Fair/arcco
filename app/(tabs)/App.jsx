@@ -287,7 +287,16 @@ function StatusScreen({ data, history, loading, error, arcOpen, schedule, setSho
         );
     }
 
-
+    return (
+        <Animated.ScrollView style={{ flex: 1, opacity: fadeAnim }} contentContainerStyle={{ padding: 16, paddingBottom: 40}}>
+            {/*Best time banner */}
+            {totalBusyBlocks > 0 && bestToday && (
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "rgba(56,189,248,.07)", borderWidth: 1, borderColor: "rgba(56,189,248,.2)", borderRadius: 12, padding: 14, marginBottom: 14 }}>
+                    
+                </View>
+            )}
+        </Animated.ScrollView>
+    )
     
     
 }
