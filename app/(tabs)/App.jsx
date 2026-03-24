@@ -439,7 +439,89 @@ function ScheduleModal({ visible, schedule, onSave, onClose, history }) {
                     ))}
                   </View>
                 )}
-</>{/* pushing now will add more later */}
+</>                {/* Add new busy block controls */}
+                <View style={{ backgroundColor: "rgba(255,255,255,.02)", borderWidth: 1, borderColor: "rgba(255,255,255,.06)", borderRadius: 12, padding: 14 }}>
+                  <Text style={{ fontSize: 11, color: "#475569", letterSpacing: 1, marginBottom: 10 }}>ADD BUSY BLOCK</Text>
+                  <View style={{ gap: 12 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                      <Text style={{ fontSize: 12, color: "#64748b", width: 34 }}>From</Text>
+                      <HourStepper value={addStart} onChange={setAddStart} min={5} max={23} />
+                    </View>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                      <Text style={{ fontSize: 12, color: "#64748b", width: 34 }}>To</Text>
+                      <HourStepper value={addEnd} onChange={setAddEnd} min={6} max={24} />
+                    </View>
+                    <TouchableOpacity
+                      onPress={addBlock}
+                      style={{
+                        alignSelf: "flex-start",
+                        paddingVertical: 8,
+                        paddingHorizontal: 20,
+                        borderRadius: 8,
+                        backgroundColor: "rgba(56,189,248,.12)",
+                        borderWidth: 1,
+                        borderColor: "rgba(56,189,248,.3)"
+                      }}
+                    >
+                      <Text style={{ color: "#38bdf8", fontSize: 13, fontWeight: "600" }}>+ Add Block</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Basic validation for time range */}
+                  {addStart >= addEnd && (
+                    <Text style={{ fontSize: 11, color: "#f87171", marginTop: 6 }}>
+                      End time must be after start time
+                    </Text>
+                  )}
+                </View>
+
+                {/* Toggle for allowing recommendations outside normal hours */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginTop: 16,
+                    padding: 14,
+                    backgroundColor: "rgba(255,255,255,.02)",
+                    borderWidth: 1,
+                    borderColor: "rgba(255,255,255,.05)",
+                    borderRadius: 10
+                  }}
+                >
+                  <View style={{ flex: 1, paddingRight: 12 }}>
+                    <Text style={{ fontSize: 13, fontWeight: "500", color: "#94a3b8" }}>Include early / late hours</Text>
+                    <Text style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>
+                      Allow suggestions before 8 AM or after 10 PM
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => setAllowEarlyLate(p => !p)}
+                    style={{
+                      width: 40,
+                      height: 22,
+                      borderRadius: 11,
+                      backgroundColor: allowEarlyLate ? "rgba(56,189,248,.4)" : "rgba(255,255,255,.08)",
+                      borderWidth: 1,
+                      borderColor: allowEarlyLate ? "rgba(56,189,248,.6)" : "rgba(255,255,255,.12)",
+                      justifyContent: "center"
+                    }}
+                  >
+                    <View
+                      style={{
+                        position: "absolute",
+                        left: allowEarlyLate ? 20 : 2,
+                        width: 16,
+                        height: 16,
+                        borderRadius: 8,
+                        backgroundColor: allowEarlyLate ? "#38bdf8" : "#475569"
+                      }}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+            {/* pushing now will push when done */}
 
 
 
