@@ -311,6 +311,42 @@ function StatusScreen({ data, history, loading, error, arcOpen, schedule, setSho
                     </View>
             )}
             
+            {/* Big meter used to display current occupancy percent or closed status*/}
+            <View style={{ backgroundColor: arcOpen ? crowd.bg : "rgba(255,255,255,.02)", borderWidth: 1, borderColor: arcOpen ? crowd.color + "28" : "rgba(255,255,255,.05)", borderRadius: 20, padding: 22, marginBottom: 14 }}>
+                <View>
+                    <View>
+                    <Text style={{ fontSize: 10, color: "#334155", letterSpacing: 1.5, marginBottom: 8, textTransform: "uppercase" }}>
+                        How busy is the ARC right now?
+                    </Text>
+                    <Text style={{ fontSize: 52, fontWeight: "800", color: arcOpen ? crowd.color : "#1e293b", lineHeight: 56 }}>
+                        {arcOpen ? `${overallPct}%` : "-"}
+                    </Text>
+                    <Text style={{ fontSize: 17, fontWeight: "600", marginTop: 8, color: arcOpen ? crowd.color : "#334155" }}>
+                        {arcOpen ? crowd.label : "Closed Right Now"}
+                    </Text>
+                </View>
+                    <View style={{ alignItems: "flex-end", paddingTop: 4}}>
+                        <Text style={{ fontSize: 10, color: "#334155", letterSpacing: 1.2, marginBottom: 4}}>TODAY'S HOURS</Text>
+                        <Text style={{ fontSize: 13, color: "#64748b", fontWeight: "500" }}>
+                            {fmtArcHour(ARC_HOURS[new Date().getDay()].open)} – {fmtArcHour(ARC_HOURS[new Date().getDay()].close)}
+                        </Text>
+                    </View>
+                </View>
+                {arcOpen && <SegmentBar pct={overallPct} color={crowd.bar} />}
+                <View style={{ flexDirection: "row", gap: 5, marginTop: 14, flexWrap: "wrap" }}>
+                    {CROWD_LEVELS.map(([label, color]) => {
+                        const active = crowd.label === label && arcOpen;
+                        return (
+                            <View key={label} style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingVertical: 3, paddingHorizontal: 9, borderRadius: 20, backgroundColor: active ? color + "18" : "rgba(255,255,255,.02)", borderWidth: 1, borderColor: active ? color + "40" : "rgba(255,255,255,.04)" }}>
+                                <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: active ? color : "#1e293b" }} />
+                                <Text style={{ fontSize: 9, color: active ? color : "#334155" }}>{label}</Text>
+                            </View>
+                        )
+                    })}
+                </View>
+            </View>
+
+
         </Animated.ScrollView>
     );
     
