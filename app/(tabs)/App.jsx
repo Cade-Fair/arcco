@@ -363,19 +363,19 @@ function StatusScreen({ data, history, loading, error, arcOpen, schedule, setSho
     
 }
 
-export default function APP(){
-const[history, setHistory] = useState([]);
-const arcOpen = isArcOpen();
-const[activeTab, setActiveTab] = useState("Status");
-const[shakeSmartHours, setShakeSmartHours] = useState(Open_Hours_SS);
-const busyBlocks= <Object.values(schedule).reduce((s,b) => s+b.length, 0);
-const[schedule, setSchedule] = useState(emptySchedule);
+// export default function APP(){
+// const[history, setHistory] = useState([]);
+// const arcOpen = isArcOpen();
+// const[activeTab, setActiveTab] = useState("Status");
+// const[shakeSmartHours, setShakeSmartHours] = useState(Open_Hours_SS);
+// const busyBlocks= <Object.values(schedule).reduce((s,b) => s+b.length, 0);
+// const[schedule, setSchedule] = useState(emptySchedule);
 // return(
 //     <View style= {styles.container}>
 //         <StatusBar style ="light" />
 //         <View style={styles.header}>
 //             <View style
-}
+//}
 //incomplete main app going to sleep will finish later and do more searching on best way 
 //to display
 
@@ -536,9 +536,9 @@ function ScheduleModal({ visible, schedule, onSave, onClose, history }) {
                     ))}
                   </View>
                 )}
-</>{/* pushing now will add more later */}
+</>/* pushing now will add more later */
 
-
+            
 
 
 // Location card bar
@@ -573,4 +573,75 @@ function LocationCard({loc}) {
             )}
         </View>
     );
+}
+function CountScreen({data, loading, error}) {
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    useEffect(() => {
+        if (!loading) {
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 450,
+                useNativeDriver: true,
+            }).start();
+        }
+    }, [loading]);
+
+    if (loading) { // displays loading state
+        return (
+            <View style={{flex: 1, alignItems: "center", justifyContent: "center", gap: 14}}>
+                <ActivityIndicator size = "large" color = " #38bdf8" />
+                <Text style = {{fontSize: 13, color: " #334155"}}>Loading Live Data</Text>
+            </View>
+        )
+    }
+
+    const filtered = data.filter(l => !["ARC Floor 1", "ARC Floor 2"].includes(l.LocationName));
+    const allFacilities = {};
+    filtered.forEach( loc => {
+        if (!allFacilities[loc.FacilityName]) allFacilities[loc.FacilityName] = [];
+        allFacilities[loc.FacilityName].push(loc);
+    });
+
+    return ( // displays the live counts for each facility, organized by facility name and location, with a fade in animation when data is loaded
+        <Animated.ScrollView style = {{flex: 1, opacity: fadeAnim}} contentContainterStyle = {{padding: 16, paddingBottom: 40}}>
+            <Text style = {{fontSize: 11, fontWeight: "7--", color: "#64748b", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16}}>Live Facility Counts</Text>
+            {Object.entries(allFacilties).map(([name, locs]) => (
+                <FacilitySection key = {name} name = {name} locs = {locs} />
+            ))}
+            {error && (
+                <View style = {{marginTop: 8, backgroundColor: "rgba(248, 113, 113, .07", borderWidth: 1, borderColor: "rgba(248, 113, 113, .18)", borderRadius: 10, padding: 12}}>
+                    <Text style = {{color: "#fca5a5", fontSize: 12}}> {error}</Text>
+                </View>
+            )}
+        </Animated.ScrollView>
+    )
+}
+
+function HoursScreen({shakeSmartHours}) {
+    return ( //Displays the hours for each facility, with a note about how ARC and Rock Climbing Wall hours are based on the weekly schedule, and a live indicator for facilities that have live data available
+        <ScrollView contentContainterStyle = {{padding : 16, paddingBottom: 40}}>
+        <Text style = {{fontSize: 11, fontWeight: "700", color: " #64748b", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16}}> Facility Hours </Text>
+        <HoursCard
+        title = "ARC"
+        emojis = "🏋️"
+        hoursMap = {ARC_HOURS}
+        isLive = {true}/>
+        <HoursCard
+        title = "Rock Climbing Wall"
+        emojis = "🧗"
+        hoursMap = {CLIMBING_HOURS}
+        isLive = {true}/>
+        <HoursCard
+        title = "Shake Smart"
+        emojis = "🥤"
+        hoursMap = {shakeSmartHours}
+        isLive = {false}/>
+
+        <View style = {{marginTop: 8, backgroundColor: "rgba(56, 189, 248, 0, 0.05", borderWidth: 1, borderRadius: 10, padding: 12}}>
+            <Text style = {{fontSize: 11, color: " #475569", lineHeight: 16}}>
+                ARC and Rock Climbing Wall Hours are based on the weekly schedule.
+            </Text>
+        </View>
+        </ScrollView>
+    )
 }
