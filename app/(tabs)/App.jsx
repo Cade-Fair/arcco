@@ -361,7 +361,126 @@ function ScheduleModal({ visible, schedule, onSave, onClose, history }) {
     });
 }
 }
-// Pushing to github now, will finish later
+// Removes a specific busy block from a given day
+  function removeBlock(dayIdx, idx) {
+    setLocalSchedule(prev => {
+      const next = JSON.parse(JSON.stringify(prev));
+      next[dayIdx] = next[dayIdx].filter((_, i) => i !== idx);
+      return next;
+    });
+  }
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
+        <TouchableOpacity activeOpacity={1} style={styles.modalCard}>
+          <View style={styles.modalHeader}>
+            <View>
+              <Text style={{ fontWeight: "700", fontSize: 16, color: "#e2e8f0" }}>My Schedule</Text>
+              <Text style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>
+                Set your busy hours — we'll find the best time to go
+              </Text>
+            </View>
+            <TouchableOpacity onPress={onClose}>
+              <Text style={{ color: "#475569", fontSize: 20 }}>✕</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Tab switcher between editing schedule and viewing suggestions */}
+          <View style={{ flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.06)", paddingHorizontal: 16 }}>
+            {[["schedule", "📅 My Schedule"], ["suggestions", `✨ Best Times${topSuggestions.length ? ` (${topSuggestions.length})` : ""}`]].map(([id, label]) => (
+              <TouchableOpacity
+                key={id}
+                onPress={() => setTab(id)}
+                style={{
+                  paddingVertical: 12,
+                  paddingHorizontal: 12,
+                  borderBottomWidth: 2,
+                  borderBottomColor: tab === id ? "#38bdf8" : "transparent",
+                  marginBottom: -1
+                }}
+              >
+                <Text style={{ fontSize: 13, fontWeight: tab === id ? "600" : "400", color: tab === id ? "#38bdf8" : "#64748b" }}>
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
+            {tab === "schedule" && (
+              <>
+                {/* Day selector pills */}
+                <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+                  {DAY_SHORT.map((d, i) => {
+                    const hasBusy = (localSchedule[i] || []).length > 0;
+                    return (
+                      <TouchableOpacity
+                        key={i}
+                        onPress={() => setActiveDay(i)}
+                        style={{
+                          paddingVertical: 5,
+                          paddingHorizontal: 12,
+                          borderRadius: 20,
+                          backgroundColor: activeDay === i ? "rgba(56,189,248,.15)" : "rgba(255,255,255,.03)",
+                          borderWidth: 1,
+                          borderColor: activeDay === i ? "rgba(56,189,248,.4)" : hasBusy ? "rgba(251,191,36,0.3)" : "rgba(255,255,255,.07)"
+                        }}
+                      >
+                        <Text style={{ fontSize: 12, fontWeight: activeDay === i ? "700" : "400", color: activeDay === i ? "#38bdf8" : hasBusy ? "#fbbf24" : "#64748b" }}>
+                          {d}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                <Text style={{ fontSize: 11, color: "#475569", letterSpacing: 1, marginBottom: 12 }}>
+                  {DAY_NAMES[activeDay].toUpperCase()} — BUSY BLOCKS
+                </Text>
+
+                {/* Show either empty state or existing busy blocks for the selected day */}
+                {(localSchedule[activeDay] || []).length === 0 ? (
+                  <View style={{ backgroundColor: "rgba(255,255,255,.02)", borderWidth: 1, borderColor: "rgba(255,255,255,.05)", borderRadius: 10, padding: 16, alignItems: "center", marginBottom: 16 }}>
+                    <Text style={{ fontSize: 13, color: "#334155" }}>
+                      No busy blocks on {DAY_NAMES[activeDay]} — you're free all day!
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={{ gap: 6, marginBottom: 16 }}>
+                    {localSchedule[activeDay].map((block, idx) => (
+                      <View
+                        key={idx}
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          backgroundColor: "rgba(251,191,36,0.07)",
+                          borderWidth: 1,
+                          borderColor: "rgba(251,191,36,0.2)",
+                          borderRadius: 10,
+                          padding: 12
+                        }}
+                      >
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#fbbf24" }} />
+                          <Text style={{ fontSize: 13, fontWeight: "600", color: "#fde68a" }}>
+                            {fmtHour(block.start)} – {fmtHour(block.end)}
+                          </Text>
+                          <Text style={{ fontSize: 11, color: "#92400e" }}>Busy</Text>
+                        </View>
+                        <TouchableOpacity onPress={() => removeBlock(activeDay, idx)}>
+                          <Text style={{ color: "#475569", fontSize: 16 }}>✕</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                )}
+</>{/* pushing now will add more later */}
+
+
+
+
 // Location card bar
 function LocationCard({loc}) {
     const pct = loc.TotalCapacity > 0 ? Math.round((loc.LastCount/loc.TotalCapacity) * 100) : 0;
