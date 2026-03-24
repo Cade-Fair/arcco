@@ -375,13 +375,13 @@ function StatusScreen({ data, history, loading, error, arcOpen, schedule, setSho
     );
 }
 
-// export default function APP(){
-// const[history, setHistory] = useState([]);
-// const arcOpen = isArcOpen();
-// const[activeTab, setActiveTab] = useState("Status");
-// const[shakeSmartHours, setShakeSmartHours] = useState(Open_Hours_SS);
-// const busyBlocks= <Object.values(schedule).reduce((s,b) => s+b.length, 0);
-// const[schedule, setSchedule] = useState(emptySchedule);
+export default function APP(){
+const[history, setHistory] = useState([]);
+const arcOpen = isArcOpen();
+const[activeTab, setActiveTab] = useState("Status");
+const[shakeSmartHours, setShakeSmartHours] = useState(Open_Hours_SS);
+const busyBlocks= Object.values(schedule).reduce((s,b) => s+b.length, 0);
+const[schedule, setSchedule] = useState(emptySchedule());
 // return(
 //     <View style= {styles.container}>
 //         <StatusBar style ="light" />
@@ -432,7 +432,7 @@ function ScheduleModal({ visible, schedule, onSave, onClose, history }) {
       return next;
     });
 }
-}
+
 // Removes a specific busy block from a given day
   function removeBlock(dayIdx, idx) {
     setLocalSchedule(prev => {
@@ -547,8 +547,13 @@ function ScheduleModal({ visible, schedule, onSave, onClose, history }) {
                       </View>
                     ))}
                   </View>
-                )}
-</>                {/* Add new busy block controls */}
+    )}
+  </>
+)}
+
+{tab === "schedule" && (
+  <>
+    {/* Add new busy block controls */}
                 <View style={{ backgroundColor: "rgba(255,255,255,.02)", borderWidth: 1, borderColor: "rgba(255,255,255,.06)", borderRadius: 12, padding: 14 }}>
                   <Text style={{ fontSize: 11, color: "#475569", letterSpacing: 1, marginBottom: 10 }}>ADD BUSY BLOCK</Text>
                   <View style={{ gap: 12 }}>
@@ -630,7 +635,113 @@ function ScheduleModal({ visible, schedule, onSave, onClose, history }) {
                 </View>
               </>
             )}
-            {/* pushing now will push when done */}
+                       {tab === "suggestions" && (
+              <>
+                {/* Summary of how suggestions are generated */}
+                <Text style={{ fontSize: 12, color: "#475569", marginBottom: 16, lineHeight: 18 }}>
+                  Based on your schedule and {history.length} crowd reading{history.length !== 1 ? "s" : ""} from{" "}
+                  <Text style={{ color: "#94a3b8", fontWeight: "500" }}>ARC Floor 1 & 2</Text>.
+                </Text>
+
+                {/* Warning if no historical data */}
+                {history.length === 0 && (
+                  <View style={{ backgroundColor: "rgba(251,191,36,.07)", borderWidth: 1, borderColor: "rgba(251,191,36,.2)", borderRadius: 10, padding: 12, marginBottom: 14 }}>
+                    <Text style={{ fontSize: 12, color: "#fde68a" }}>
+                      ⚠ No historical data yet — suggestions are estimated and will improve over time.
+                    </Text>
+                  </View>
+                )}
+
+                {/* Suggestions list */}
+                {topSuggestions.length === 0 ? (
+                  <Text style={{ textAlign: "center", padding: 32, color: "#334155", fontSize: 13 }}>
+                    No free slots found. Try removing busy blocks or enabling early/late hours.
+                  </Text>
+                ) : (
+                  <View style={{ gap: 8 }}>
+                    {topSuggestions.map((s, idx) => {
+                      const crowd = getCrowd(s.crowdPct);
+                      const isToday = s.day === new Date().getDay();
+
+                      return (
+                        <View
+                          key={idx}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 12,
+                            backgroundColor: idx === 0 ? "rgba(56,189,248,.07)" : "rgba(255,255,255,.025)",
+                            borderWidth: 1,
+                            borderColor: idx === 0 ? "rgba(56,189,248,.25)" : "rgba(255,255,255,.06)",
+                            borderRadius: 12,
+                            padding: 14
+                          }}
+                        >
+                          {/* Rank */}
+                          <View
+                            style={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: 14,
+                              backgroundColor: idx === 0 ? "rgba(56,189,248,.2)" : "rgba(255,255,255,.05)",
+                              borderWidth: 1,
+                              borderColor: idx === 0 ? "rgba(56,189,248,.4)" : "rgba(255,255,255,.08)",
+                              alignItems: "center",
+                              justifyContent: "center"
+                            }}
+                          >
+                            <Text style={{ fontSize: 11, fontWeight: "700", color: idx === 0 ? "#38bdf8" : "#475569" }}>
+                              {idx + 1}
+                            </Text>
+                          </View>
+
+                          {/* Time info */}
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ fontWeight: "700", fontSize: 14, color: "#e2e8f0" }}>
+                              {DAY_NAMES[s.day]}
+                            </Text>
+                            <Text style={{ fontSize: 12, color: "#64748b" }}>
+                              {fmtHour(s.hour)} – {fmtHour(s.hour + 1)}
+                            </Text>
+                          </View>
+
+                          {/* Crowd percentage */}
+                          <View style={{ alignItems: "flex-end" }}>
+                            {s.crowdPct !== null ? (
+                              <>
+                                <Text style={{ fontSize: 16, fontWeight: "800", color: crowd.color }}>
+                                  {Math.round(s.crowdPct)}%
+                                </Text>
+                                <Text style={{ fontSize: 10, color: crowd.color }}>{crowd.label}</Text>
+                              </>
+                            ) : (
+                              <Text style={{ fontSize: 11, color: "#334155" }}>No data yet</Text>
+                            )}
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+              </>
+            )}
+          </ScrollView>
+
+          {/* Modal footer buttons */}
+          <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 8, padding: 14, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,.06)" }}>
+            <TouchableOpacity onPress={onClose} style={styles.btnSecondary}>
+              <Text style={{ color: "#94a3b8", fontSize: 13 }}>Cancel</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => { onSave(localSchedule); onClose(); }} style={styles.btnPrimary}>
+              <Text style={{ color: "#38bdf8", fontSize: 13, fontWeight: "600" }}>Save Schedule</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </TouchableOpacity>
+    </Modal>
+  );
+}
 
 </>/* pushing now will add more later */
 
