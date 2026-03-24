@@ -290,16 +290,29 @@ function StatusScreen({ data, history, loading, error, arcOpen, schedule, setSho
     }
 
     return (
-        <Animated.ScrollView style={{ flex: 1, opacity: fadeAnim }} contentContainerStyle={{ padding: 16, paddingBottom: 40}}>
-            {/*Best time banner */}
+        // Main scrollable screen w fade-in animation
+        <Animated.ScrollView style={{ flex: 1, opacity: fadeAnim }} contentContainerStyle={{ padding: 16, paddingBottom: 40}}> 
+            {/*Best time banner to display best time to visit based on data*/} 
             {totalBusyBlocks > 0 && bestToday && (
                 <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "rgba(56,189,248,.07)", borderWidth: 1, borderColor: "rgba(56,189,248,.2)", borderRadius: 12, padding: 14, marginBottom: 14 }}>
-                    
-                </View>
+                    <View style={{ flexDirections: "row", alignItems: "center", gap: 8, flex: 1}}>
+                        <Text style={{ fontSize: 16 }}>✨</Text>
+                        <Text style={{ fontSize: 12, fontWeight: "600", color: "#38bdf8" }}>
+                            Best time today:{" "}
+                            <Text style={{ color: "#94a3b8", fontWeight: "400" }}>{fmtHour(bestToday.hour)} - {fmtHour(bestToday.hour + 1)}</Text>
+                            {bestToday.crowdPct !==null && (
+                                <Text style ={{ color: getCrowd(bestToday.crowdPct),color }}> ~{Math.round(bestToday.crowdPct)}% full</Text>
+                            )}
+                        </Text>
+                    </View>
+                    <TouchableOpacity onPress={() => setShowSchedule(true)}>
+                        <Text style={{ fontSize: 11, color: "#38bdf8", textDecorationLine: "underline" }}>See all →</Text>
+                    </TouchableOpacity>
+                    </View>
             )}
+            
         </Animated.ScrollView>
-    )
-    
+    );
     
 }
 
