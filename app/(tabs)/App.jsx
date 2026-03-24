@@ -269,7 +269,25 @@ function StatusScreen({ data, history, loading, error, arcOpen, schedule, setSho
         ? Math.round(openLocs.reduce((s, l) => s (l.TotalCapacity > 0 ? (l.LastCount / l.TotalCapacity) * 100 : 0), 0) / openLocs.length)
         : 0;
     const crowd = getCrowd(arcOpen ? overallPct : null); //determines crowd level based on occupancy
-    
+
+    // Only show ARC Floor 1 & 2
+    const arcFloors = data.filter(l => ["ARC Floor 1", "ARC Floor 2"].includes(l.LocationName));
+
+    const totalBusyBlocks = Object.values(schedule).reduce((s, b) => s + b.length, 0);
+    const todaySuggestions = computeSuggestions(history, schedule, false).filter(s => s.day === new Date().getDay());
+    const bestToday = todaySuggestions [0];
+    // above is computing best times to visit today based on past history and schedule
+
+    if (loading) { // Shows the loading spinner while fetching data
+        return (
+            <View style={{flex: 1, alignItems: "center", justifyContent: "center", gap: 14}}>
+                <ActivityIndicator size="large" color="#38bdf8" />
+                <Text style={{ fontSize: 13, color: "#334155" }}>Loading live data..</Text>
+            </View>
+        );
+    }
+
+
     
     
 }
