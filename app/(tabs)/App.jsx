@@ -151,6 +151,57 @@ function HourStepper({ value, onChange, min = 5, max = 24 }) {
   );
 }
 
+// Hours Card that generates weekly operating hours for each facility
+function HoursCard({ title, emoji, hoursMap, isLive, onEdit }) {
+  // Current day logic
+  const today   = new Date().getDay();
+  const todayHr = hoursMap[today];
+  const isOpen  = todayHr != null;
+  // Format Hours
+  const openLabel  = isLive ? fmtArcHour(todayHr?.open)  : todayHr?.open  ?? "Closed";
+  const closeLabel = isLive ? fmtArcHour(todayHr?.close) : todayHr?.close ?? "";
+
+  return (
+    <View style={{ backgroundColor: "rgba(255,255,255,0.02)", borderWidth: 1, borderColor: "rgba(255,255,255,0.07)", borderRadius: 16, padding: 18, marginBottom: 14 }}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Text style={{ fontSize: 22 }}>{emoji}</Text>
+          <View>
+            <Text style={{ fontWeight: "700", fontSize: 15, color: "#e2e8f0" }}>{title}</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 3 }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isOpen ? "#34d399" : "#f87171" }} />
+              <Text style={{ fontSize: 11, color: isOpen ? "#34d399" : "#f87171", fontWeight: "600" }}>
+                {isOpen ? `Open · ${openLabel} – ${closeLabel}` : "Closed Today"}
+              </Text>
+            </View>
+          </View>
+        </View>
+        {onEdit && (
+          <TouchableOpacity onPress={onEdit} style={{ paddingVertical: 4, paddingHorizontal: 12, borderRadius: 8, backgroundColor: "rgba(56,189,248,0.08)", borderWidth: 1, borderColor: "rgba(56,189,248,0.2)" }}>
+            <Text style={{ fontSize: 11, color: "#38bdf8" }}>Edit</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+      <View style={{ gap: 6 }}>
+        {DAY_NICKNAMES.map((day, i) => {
+          const hr      = hoursMap[i];
+          const isToday = i === today;
+          const open    = isLive ? fmtArcHour(hr?.open)  : hr?.open;
+          const close   = isLive ? fmtArcHour(hr?.close) : hr?.close;
+          return (
+            <View key={i} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 5, paddingHorizontal: 10, borderRadius: 8, backgroundColor: isToday ? "rgba(56,189,248,0.06)" : "transparent", borderWidth: isToday ? 1 : 0, borderColor: "rgba(56,189,248,0.15)" }}>
+              <Text style={{ fontSize: 13, fontWeight: isToday ? "700" : "400", color: isToday ? "#38bdf8" : "#64748b", width: 36 }}>{day}</Text>
+              <Text style={{ fontSize: 13, color: hr ? (isToday ? "#e2e8f0" : "#94a3b8") : "#334155" }}>
+                {hr ? `${open} – ${close}` : "Closed"}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
 // Algorithm to suggest best times to get to ARC
 function computeSuggestions(history, schedule, allowEarlyLate = false) {
   const REASONABLE_START = 8;
@@ -403,7 +454,8 @@ function StatusScreen({ data, history, loading, error, arcOpen, schedule, setSho
                 <Text style={{ fontSize: 10, color: "#334155", letterSpacing: 1.5, marginBottom: 12, textTransform: "uppercase" }}>
                     Today's Timeline · {history.length} Snapshot{history.length !== 1 ? "s" : ""} Collected
                 </Text>
-                <Timeline history={history} />
+
+                {/* <Timeline history={history} /> */}
                 {history.length < 2 && (
                     <Text style={{ textAlign: "center", paddingTop: 8, fontSize: 11, color: "#1e293b" }}>Timeline fills in every 5 min as you use the app</Text>
                 )}
@@ -896,7 +948,7 @@ const[showSchedule, setShowSchedule] = useState(false);
 const[data, setData] = useState([]);
 const[lastUpdated, setUpdated] = useState(null);
 const[error, setError] = useState(null);
-const [loading, setLoading] = useState(true);
+const [loading, setLoading] = useState(false);
 
 return( //Main app component that manages state and renders the header, main content based on active tab, and bottom tab bar. It also includes modals for schedule and shake smart hours.
     <View style= {styles.container}>
