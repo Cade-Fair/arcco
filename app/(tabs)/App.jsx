@@ -257,12 +257,22 @@ secondHeader:{
 },
 });
 
+//Main Screen that dipslays ARC gym status, crowd level, and usage trends
 function StatusScreen({ data, history, loading, error, arcOpen, schedule, setShowSchedule}) {
+    //Animated screen fade-in
     const fadeAnim = useRef(new Animated.Value(0)).current;
     useEffect(() => {
         if (!loading) Animated.timing(fadeAnim, {toValue: 1, duration: 450, useNativeDriver: true}).start();
     }, [loading]);
-
+    
+    const locs = data.filter(l => l.FacilityName === "ARC"); //gets only ARC locations
+    const openLocs = locs.filter(l => !l.isClosed); //keeps only open locations
+    const overallPct = openLocs.length // Calculate average occupancy percentage across all open ARC locations
+        ? Math.round(openLocs.reduce((s, l) => s (l.TotalCapacity > 0 ? (l.LastCount / l.TotalCapacity) * 100 : 0), 0) / openLocs.length)
+        : 0;
+    const crowd = getCrowd(arcOpen ? overallPct : null); //determines crowd level based on occupancy
+    
+    
     
 }
 
