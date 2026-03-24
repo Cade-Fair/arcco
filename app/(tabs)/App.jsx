@@ -257,28 +257,137 @@ secondHeader:{
 },
 });
 
+//Main Screen that displays ARC gym status, crowd level, and usage trends
 function StatusScreen({ data, history, loading, error, arcOpen, schedule, setShowSchedule}) {
+    //Animated screen fade-in
     const fadeAnim = useRef(new Animated.Value(0)).current;
     useEffect(() => {
         if (!loading) Animated.timing(fadeAnim, {toValue: 1, duration: 450, useNativeDriver: true}).start();
     }, [loading]);
-
     
+    const locs = data.filter(l => l.FacilityName === "ARC"); //gets only ARC locations
+    const openLocs = locs.filter(l => !l.IsClosed); //keeps only open locations
+    const overallPct = openLocs.length // Calculate average occupancy percentage across all open ARC locations
+        ? Math.round(openLocs.reduce((s, l) => s + (l.TotalCapacity > 0 ? (l.LastCount / l.TotalCapacity) * 100 : 0), 0) / openLocs.length)
+        : 0;
+    const crowd = getCrowd(arcOpen ? overallPct : null); //determines crowd level based on occupancy
+
+    // Only show ARC Floor 1 & 2
+    const arcFloors = data.filter(l => ["ARC Floor 1", "ARC Floor 2"].includes(l.LocationName));
+
+    const totalBusyBlocks = Object.values(schedule).reduce((s, b) => s + b.length, 0);
+    const todaySuggestions = computeSuggestions(history, schedule, false).filter(s => s.day === new Date().getDay());
+    const bestToday = todaySuggestions[0];
+    // above is computing best times to visit today based on past history and schedule
+
+    if (loading) { // Shows the loading spinner while fetching data
+        return (
+            <View style={{flex: 1, alignItems: "center", justifyContent: "center", gap: 14}}>
+                <ActivityIndicator size="large" color="#38bdf8" />
+                <Text style={{ fontSize: 13, color: "#334155" }}>Loading live data...</Text>
+            </View>
+        );
+    }
+
+    return (
+        // Main scrollable screen w fade-in animation
+        <Animated.ScrollView style={{ flex: 1, opacity: fadeAnim }} contentContainerStyle={{ padding: 16, paddingBottom: 40}}> 
+            {/*Best time banner to display best time to visit based on data*/} 
+            {totalBusyBlocks > 0 && bestToday && (
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "rgba(56,189,248,.07)", borderWidth: 1, borderColor: "rgba(56,189,248,.2)", borderRadius: 12, padding: 14, marginBottom: 14 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1}}>
+                        <Text style={{ fontSize: 16 }}>✨</Text>
+                        <Text style={{ fontSize: 12, fontWeight: "600", color: "#38bdf8" }}>
+                            Best time today:{" "}
+                            <Text style={{ color: "#94a3b8", fontWeight: "400" }}>{fmtHour(bestToday.hour)} - {fmtHour(bestToday.hour + 1)}</Text>
+                            {bestToday.crowdPct !==null && (
+                                <Text style={{ color: getCrowd(bestToday.crowdPct).color }}> ~{Math.round(bestToday.crowdPct)}% full</Text>
+                            )}
+                        </Text>
+                    </View>
+                    <TouchableOpacity onPress={() => setShowSchedule(true)}>
+                        <Text style={{ fontSize: 11, color: "#38bdf8", textDecorationLine: "underline" }}>See all →</Text>
+                    </TouchableOpacity>
+                    </View>
+            )}
+            
+            {/* Big meter used to display current occupancy percent or closed status*/}
+            <View style={{ backgroundColor: arcOpen ? crowd.bg : "rgba(255,255,255,.02)", borderWidth: 1, borderColor: arcOpen ? crowd.color + "28" : "rgba(255,255,255,.05)", borderRadius: 20, padding: 22, marginBottom: 14 }}>
+                <View>
+                    <View>
+                    <Text style={{ fontSize: 10, color: "#334155", letterSpacing: 1.5, marginBottom: 8, textTransform: "uppercase" }}>
+                        How busy is the ARC right now?
+                    </Text>
+                    <Text style={{ fontSize: 52, fontWeight: "800", color: arcOpen ? crowd.color : "#1e293b", lineHeight: 56 }}>
+                        {arcOpen ? `${overallPct}%` : "-"}
+                    </Text>
+                    <Text style={{ fontSize: 17, fontWeight: "600", marginTop: 8, color: arcOpen ? crowd.color : "#334155" }}>
+                        {arcOpen ? crowd.label : "Closed Right Now"}
+                    </Text>
+                </View>
+                    <View style={{ alignItems: "flex-end", paddingTop: 4}}>
+                        <Text style={{ fontSize: 10, color: "#334155", letterSpacing: 1.2, marginBottom: 4}}>TODAY'S HOURS</Text>
+                        <Text style={{ fontSize: 13, color: "#64748b", fontWeight: "500" }}>
+                            {fmtArcHour(ARC_HOURS[new Date().getDay()].open)} – {fmtArcHour(ARC_HOURS[new Date().getDay()].close)}
+                        </Text>
+                    </View>
+                </View>
+                {arcOpen && <SegmentBar pct={overallPct} color={crowd.bar} />}
+                <View style={{ flexDirection: "row", gap: 5, marginTop: 14, flexWrap: "wrap" }}>
+                    {CROWD_LEVELS.map(([label, color]) => {
+                        const active = crowd.label === label && arcOpen;
+                        return (
+                            <View key={label} style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingVertical: 3, paddingHorizontal: 9, borderRadius: 20, backgroundColor: active ? color + "18" : "rgba(255,255,255,.02)", borderWidth: 1, borderColor: active ? color + "40" : "rgba(255,255,255,.04)" }}>
+                                <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: active ? color : "#1e293b" }} />
+                                <Text style={{ fontSize: 9, color: active ? color : "#334155" }}>{label}</Text>
+                            </View>
+                        )
+                    })}
+                </View>
+            </View>
+
+            {/* Timeline to show past data (every 5 minutes)*/}
+            <View style={{ backgroundColor: "rgba(255,255,255,.02)", borderWidth: 1, borderColor: "rgba(255,255,255,.05)", borderRadius: 16, padding: 16, marginBottom: 16 }}>
+                <Text style={{ fontSize: 10, color: "#334155", letterSpacing: 1.5, marginBottom: 12, textTransform: "uppercase" }}>
+                    Today's Timeline · {history.length} Snapshot{history.length !== 1 ? "s" : ""} Collected
+                </Text>
+                <Timeline history={history} />
+                {history.length < 2 && (
+                    <Text style={{ textAlign: "center", paddingTop: 8, fontSize: 11, color: "#1e293b" }}>Timeline fills in every 5 min as you use the app</Text>
+                )}
+            </View>
+
+            {/* ARC Floor 1 & 2 cards */}
+            {/* Renders individual cards for Floor 1 and Floor 2*/}
+            <Text style={{ fontSize: 11, fontWeight: "700", color: "#64748b", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12 }}>ARC Floors</Text>
+            {arcFloors.length > 0
+                ? arcFloors.map(loc => <LocationCard key={loc.LocationId || loc.LocationName} loc={loc} />)
+                : <Text style={{ color: "#334155", fontSize: 13, marginBottom: 12 }}>No floor data available.</Text>
+            }
+
+            {error && (
+                <View style ={{ marginTop: 8, backgroundColor: "rgba(248,113,113,.07)", borderWidth: 1, borderColor: "rgba(248,113,113,.18)", borderRadius: 10, padding: 12 }}>
+                    <Text style={{ color: "#fca5a5", fontSize: 12 }}>⚠ {error}</Text>
+                </View>
+            )} 
+            {/* Shows an error message if data fetch fails*/}
+        </Animated.ScrollView>
+    );
 }
 
-export default function APP(){
-const[history, setHistory] = useState([]);
-const arcOpen = isArcOpen();
-const[activeTab, setActiveTab] = useState("Status");
-const[shakeSmartHours, setShakeSmartHours] = useState(Open_Hours_SS);
-const busyBlocks= <Object.values(schedule).reduce((s,b) => s+b.length, 0);
-const[schedule, setSchedule] = useState(emptySchedule);
+// export default function APP(){
+// const[history, setHistory] = useState([]);
+// const arcOpen = isArcOpen();
+// const[activeTab, setActiveTab] = useState("Status");
+// const[shakeSmartHours, setShakeSmartHours] = useState(Open_Hours_SS);
+// const busyBlocks= <Object.values(schedule).reduce((s,b) => s+b.length, 0);
+// const[schedule, setSchedule] = useState(emptySchedule);
 // return(
 //     <View style= {styles.container}>
 //         <StatusBar style ="light" />
 //         <View style={styles.header}>
 //             <View style
-}
+//}
 //incomplete main app going to sleep will finish later and do more searching on best way 
 //to display
 
@@ -523,7 +632,9 @@ function ScheduleModal({ visible, schedule, onSave, onClose, history }) {
             )}
             {/* pushing now will push when done */}
 
+</>/* pushing now will add more later */
 
+            
 
 
 // Location card bar
@@ -558,4 +669,75 @@ function LocationCard({loc}) {
             )}
         </View>
     );
+}
+function CountScreen({data, loading, error}) {
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    useEffect(() => {
+        if (!loading) {
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 450,
+                useNativeDriver: true,
+            }).start();
+        }
+    }, [loading]);
+
+    if (loading) { // displays loading state
+        return (
+            <View style={{flex: 1, alignItems: "center", justifyContent: "center", gap: 14}}>
+                <ActivityIndicator size = "large" color = " #38bdf8" />
+                <Text style = {{fontSize: 13, color: " #334155"}}>Loading Live Data</Text>
+            </View>
+        )
+    }
+
+    const filtered = data.filter(l => !["ARC Floor 1", "ARC Floor 2"].includes(l.LocationName));
+    const allFacilities = {};
+    filtered.forEach( loc => {
+        if (!allFacilities[loc.FacilityName]) allFacilities[loc.FacilityName] = [];
+        allFacilities[loc.FacilityName].push(loc);
+    });
+
+    return ( // displays the live counts for each facility, organized by facility name and location, with a fade in animation when data is loaded
+        <Animated.ScrollView style = {{flex: 1, opacity: fadeAnim}} contentContainterStyle = {{padding: 16, paddingBottom: 40}}>
+            <Text style = {{fontSize: 11, fontWeight: "7--", color: "#64748b", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16}}>Live Facility Counts</Text>
+            {Object.entries(allFacilties).map(([name, locs]) => (
+                <FacilitySection key = {name} name = {name} locs = {locs} />
+            ))}
+            {error && (
+                <View style = {{marginTop: 8, backgroundColor: "rgba(248, 113, 113, .07", borderWidth: 1, borderColor: "rgba(248, 113, 113, .18)", borderRadius: 10, padding: 12}}>
+                    <Text style = {{color: "#fca5a5", fontSize: 12}}> {error}</Text>
+                </View>
+            )}
+        </Animated.ScrollView>
+    )
+}
+
+function HoursScreen({shakeSmartHours}) {
+    return ( //Displays the hours for each facility, with a note about how ARC and Rock Climbing Wall hours are based on the weekly schedule, and a live indicator for facilities that have live data available
+        <ScrollView contentContainterStyle = {{padding : 16, paddingBottom: 40}}>
+        <Text style = {{fontSize: 11, fontWeight: "700", color: " #64748b", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16}}> Facility Hours </Text>
+        <HoursCard
+        title = "ARC"
+        emojis = "🏋️"
+        hoursMap = {ARC_HOURS}
+        isLive = {true}/>
+        <HoursCard
+        title = "Rock Climbing Wall"
+        emojis = "🧗"
+        hoursMap = {CLIMBING_HOURS}
+        isLive = {true}/>
+        <HoursCard
+        title = "Shake Smart"
+        emojis = "🥤"
+        hoursMap = {shakeSmartHours}
+        isLive = {false}/>
+
+        <View style = {{marginTop: 8, backgroundColor: "rgba(56, 189, 248, 0, 0.05", borderWidth: 1, borderRadius: 10, padding: 12}}>
+            <Text style = {{fontSize: 11, color: " #475569", lineHeight: 16}}>
+                ARC and Rock Climbing Wall Hours are based on the weekly schedule.
+            </Text>
+        </View>
+        </ScrollView>
+    )
 }
