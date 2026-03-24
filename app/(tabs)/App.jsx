@@ -1,17 +1,10 @@
-// import{image} from 'expo-image';
-// import { Platform,styleSheet}from 'react-native';
-// import{ThemedText} from '@components/ThemedText'
-// import ParallaxScrollView from '@/components/parallax-ScrollView';
-// import{ThemedView} from '@components/ThemedView';
-// import{IconSymbol} from ' @/components/ui/icon-symbol';
-// import{fonts} from '@constant/theme';
-// import { ActivityIndicator, Animated, Modal, ScrollView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View}  from 'react-native-web';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 // all nesscsary imports for UI and frontend 
 
-import { View } from "react-native-web";
 
-
-const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday, Thursday",
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
     "Friday", "Saturday"];
     const DAY_NICKNAMES= ["Sun", "Mon", "Tue", "Wed", "Thurs",
         "Fri", "Sat"]; 
@@ -38,7 +31,7 @@ const Open_Hours_SS = {
 3:{ open: "7:00 AM", close: "9:00PM"},
 4:{ open: "7:00 AM", close: "9:00PM"},
 5:{ open: "7:00 AM", close: "8:00PM"},
-5:{ open: "10:00 AM", close: "6:00PM"},
+6:{ open: "10:00 AM", close: "6:00PM"},
 };
 // sunday to monday ex 10AM open on Sunday 6pm close
 //hard coded structure for specfically the hours tab UI 
@@ -57,7 +50,7 @@ const Crowd_Cntrl_Gage= [
 function isArcOpen() {
     const now = new Date();
     const h = now.getHours() + now.getMinutes() / 60;
-    const {open, close} = Open_Hours[now.getDay()];
+    const {open, close} = Open_Hours_GYM[now.getDay()];
     return h >= open && h < close;
 }
 
@@ -141,11 +134,30 @@ function emptySchedule() {
     return s;
 }
 
+// Hour Stepper
+function HourStepper({ value, onChange, min = 5, max = 24 }) {
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#1a2035", borderWidth: 1, borderColor: "rgba(255,255,255,0.1)", borderRadius: 10, overflow: "hidden" }}>
+      <TouchableOpacity onPress={() => onChange(Math.max(min, value - 1))} style={{ paddingHorizontal: 14, paddingVertical: 9, backgroundColor: "rgba(255,255,255,0.04)" }}>
+        <Text style={{ color: "#64748b", fontSize: 18, lineHeight: 20 }}>−</Text>
+      </TouchableOpacity>
+      <Text style={{ color: "#e2e8f0", fontSize: 13, fontWeight: "600", minWidth: 64, textAlign: "center" }}>
+        {fmtHour(value)}
+      </Text>
+      <TouchableOpacity onPress={() => onChange(Math.min(max, value + 1))} style={{ paddingHorizontal: 14, paddingVertical: 9, backgroundColor: "rgba(255,255,255,0.04)" }}>
+        <Text style={{ color: "#64748b", fontSize: 18, lineHeight: 20 }}>+</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 // Algorithm to suggest best times to get to ARC
 function computeSuggestions(history, schedule, allowEarlyLate = false) {
+  const REASONABLE_START = 8;
+  const REASONABLE_END = 22;
   const suggestions = [];
   for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
-    const { open, close } = ARC_HOURS[dayIdx];
+    const { open, close } = Open_Hours_GYM[dayIdx];
     const arcOpen  = Math.ceil(open);
     const arcClose = Math.min(Math.floor(close), 24);
     const minHour  = allowEarlyLate ? arcOpen      : Math.max(arcOpen + 1, REASONABLE_START);
@@ -173,10 +185,11 @@ function computeSuggestions(history, schedule, allowEarlyLate = false) {
   return suggestions;
 }
 
+
 // diffrent sections of the arc
 const Arc_sections = [{
 name: "ARC", locations: [
-    "ARC Floor 1", "ARC Floor2", "ARC Olympic Gym", "ARC Courts"],},]
+    "ARC Floor 1", "ARC Floor 2", "ARC Olympic Gym", "ARC Courts"],},]
 
 //layout/ general UI colors 
 const styles = StyleSheet.create({
@@ -255,6 +268,45 @@ secondHeader:{
     borderWidth: 1,
     borderColor: "rgba(49, 189, 249, 0.04)"
 },
+modalOverlay:{
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+},
+modalCard:{
+    backgroundColor: "#0a0f1b",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.05)",
+    borderTopRightRadius: 20,
+    borderTopLeftRadius: 20,
+    maxHeight: "90%",
+    flex:1,
+    marginTop: "10%",
+},
+modalHeader:{
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.05)",
+},
+btnPrimary:{
+    paddingVertical: 9,
+    paddingHorizontal: 18,
+    borderRadius: 8,
+    backgroundColor: "rgba(56,189,248,.12)",
+    borderWidth: 1,
+    borderColor: "rgba(56,189,248,.3)",
+},
+btnSecondary:{
+    paddingVertical: 9,
+    paddingHorizontal: 18,
+    borderRadius: 8,
+    backgroundColor: "rgba(255,255,255,.04)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,.08)",
+},
 });
 
 //Main Screen that displays ARC gym status, crowd level, and usage trends
@@ -328,13 +380,13 @@ function StatusScreen({ data, history, loading, error, arcOpen, schedule, setSho
                     <View style={{ alignItems: "flex-end", paddingTop: 4}}>
                         <Text style={{ fontSize: 10, color: "#334155", letterSpacing: 1.2, marginBottom: 4}}>TODAY'S HOURS</Text>
                         <Text style={{ fontSize: 13, color: "#64748b", fontWeight: "500" }}>
-                            {fmtArcHour(ARC_HOURS[new Date().getDay()].open)} – {fmtArcHour(ARC_HOURS[new Date().getDay()].close)}
+                            {fmtArcHour(Open_Hours_GYM[new Date().getDay()].open)} – {fmtArcHour(Open_Hours_GYM[new Date().getDay()].close)}
                         </Text>
                     </View>
                 </View>
                 {arcOpen && <SegmentBar pct={overallPct} color={crowd.bar} />}
                 <View style={{ flexDirection: "row", gap: 5, marginTop: 14, flexWrap: "wrap" }}>
-                    {CROWD_LEVELS.map(([label, color]) => {
+                    {Crowd_Cntrl_Gage.map(([label, color]) => {
                         const active = crowd.label === label && arcOpen;
                         return (
                             <View key={label} style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingVertical: 3, paddingHorizontal: 9, borderRadius: 20, backgroundColor: active ? color + "18" : "rgba(255,255,255,.02)", borderWidth: 1, borderColor: active ? color + "40" : "rgba(255,255,255,.04)" }}>
@@ -374,27 +426,6 @@ function StatusScreen({ data, history, loading, error, arcOpen, schedule, setSho
         </Animated.ScrollView>
     );
 }
-
-export default function APP(){
-const[history, setHistory] = useState([]);
-const arcOpen = isArcOpen();
-const[activeTab, setActiveTab] = useState("Status");
-const[shakeSmartHours, setShakeSmartHours] = useState(Open_Hours_SS);
-const[schedule, setSchedule] = useState(emptySchedule);
-const[showSchedule, setShowSchedule] = useState(false);
-const[data, setData] = useState([]);
-const[lastUpdated, setUpdated] = useState(null);
-const[error, setError] = useState(null);
-const [loading, setLoading] = useState(true);
-
-// return(
-//     <View style= {styles.container}>
-//         <StatusBar style ="light" />
-//         <View style={styles.header}>
-//             <View style
-//}
-//incomplete main app going to sleep will finish later and do more searching on best way 
-//to display
 
 //Starting function ScheduleModal
 function ScheduleModal({ visible, schedule, onSave, onClose, history }) {
@@ -489,7 +520,7 @@ function ScheduleModal({ visible, schedule, onSave, onClose, history }) {
               <>
                 {/* Day selector pills */}
                 <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
-                  {DAY_SHORT.map((d, i) => {
+                  {DAY_NICKNAMES.map((d, i) => {
                     const hasBusy = (localSchedule[i] || []).length > 0;
                     return (
                       <TouchableOpacity
@@ -756,13 +787,13 @@ function ScheduleModal({ visible, schedule, onSave, onClose, history }) {
 // Location card bar
 function LocationCard({loc}) {
     const pct = loc.TotalCapacity > 0 ? Math.round((loc.LastCount/loc.TotalCapacity) * 100) : 0;
-    const crowd = getCrowd(loc.isClosed ? null : pct);
+    const crowd = getCrowd(loc.IsClosed ? null : pct);
     return (
-        <View style = {{backgroundColor : loc.isClosed ? "rgba(255,255,255,0.5)" : crowd.bg, borderWidth: 1, borderColor: "rgba(0,0,0,1", borderRadius: 14, padding: 16, opacity: loc.isClosed ? 0.5 : 1, marginBottom: 8}}>
-            <View style = {{flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: loc.isClosed ? 0 : 10}}>
+        <View style = {{backgroundColor : loc.IsClosed ? "rgba(255,255,255,0.05)" : crowd.bg, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", borderRadius: 14, padding: 16, opacity: loc.IsClosed ? 0.5 : 1, marginBottom: 8}}>
+            <View style = {{flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: loc.IsClosed ? 0 : 10}}>
                 <View style = {{flex: 1, paddingRight: 8}}>
-                    <Text style = {{fontWeight: "600",fontSize: 14, color: loc.isClosed ? "#94a3b8" : "#1e293b"}}> {loc.LocationName} </Text>
-                    {loc.isClosed && <Text style = {{fontSize: 10, color: "#94a3b8", marginTop: 3}}>Closed</Text>}
+                    <Text style = {{fontWeight: "600",fontSize: 14, color: loc.IsClosed ? "#94a3b8" : "#1e293b"}}> {loc.LocationName} </Text>
+                    {loc.IsClosed && <Text style = {{fontSize: 10, color: "#94a3b8", marginTop: 3}}>Closed</Text>}
                 </View>
                 {!loc.IsClosed && (
                     <View style={{ alignItems: "flex-end" }}>
@@ -771,13 +802,13 @@ function LocationCard({loc}) {
                     </View>
                 )}
             </View>
-            {!loc.isClosed && (
+            {!loc.IsClosed && (
                 <>
                 <SegmentBar pct = {pct} color={crowd.bar} height = {13}/>
                 <View style = {{flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 7}}>
                     <View style = {{flexDirection: "row", alignItems: "center", gap: 5}}>
                         <View style = {{width: 5, height: 5, borderRadius: 3, backgroundColor: crowd.color}} />
-                        <Text style = {{fontSize: 11, color: crowd.color, fontWeight: "500"}} > {loc.lastCount} people here</Text>
+                        <Text style = {{fontSize: 11, color: crowd.color, fontWeight: "500"}} > {loc.LastCount} people here</Text>
                     </View>
                 <Text style = {{fontSize: 10, color: "#64748b"}}>cap {loc.TotalCapacity}</Text>
                     </View>
@@ -801,8 +832,8 @@ function CountScreen({data, loading, error}) {
     if (loading) { // displays loading state
         return (
             <View style={{flex: 1, alignItems: "center", justifyContent: "center", gap: 14}}>
-                <ActivityIndicator size = "large" color = " #38bdf8" />
-                <Text style = {{fontSize: 13, color: " #334155"}}>Loading Live Data</Text>
+                <ActivityIndicator size = "large" color = "#38bdf8" />
+                <Text style = {{fontSize: 13, color: "#334155"}}>Loading Live Data</Text>
             </View>
         )
     }
@@ -815,13 +846,13 @@ function CountScreen({data, loading, error}) {
     });
 
     return ( // displays the live counts for each facility, organized by facility name and location, with a fade in animation when data is loaded
-        <Animated.ScrollView style = {{flex: 1, opacity: fadeAnim}} contentContainterStyle = {{padding: 16, paddingBottom: 40}}>
-            <Text style = {{fontSize: 11, fontWeight: "7--", color: "#64748b", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16}}>Live Facility Counts</Text>
-            {Object.entries(allFacilties).map(([name, locs]) => (
+        <Animated.ScrollView style = {{flex: 1, opacity: fadeAnim}} contentContainerStyle = {{padding: 16, paddingBottom: 40}}>
+            <Text style = {{fontSize: 11, fontWeight: "700", color: "#64748b", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16}}>Live Facility Counts</Text>
+            {Object.entries(allFacilities).map(([name, locs]) => (
                 <FacilitySection key = {name} name = {name} locs = {locs} />
             ))}
             {error && (
-                <View style = {{marginTop: 8, backgroundColor: "rgba(248, 113, 113, .07", borderWidth: 1, borderColor: "rgba(248, 113, 113, .18)", borderRadius: 10, padding: 12}}>
+                <View style = {{marginTop: 8, backgroundColor: "rgba(248, 113, 113, .07)", borderWidth: 1, borderColor: "rgba(248, 113, 113, .18)", borderRadius: 10, padding: 12}}>
                     <Text style = {{color: "#fca5a5", fontSize: 12}}> {error}</Text>
                 </View>
             )}
@@ -831,27 +862,85 @@ function CountScreen({data, loading, error}) {
 
 function HoursScreen({shakeSmartHours}) {
     return ( //Displays the hours for each facility, with a note about how ARC and Rock Climbing Wall hours are based on the weekly schedule, and a live indicator for facilities that have live data available
-        <ScrollView contentContainterStyle = {{padding : 16, paddingBottom: 40}}>
-        <Text style = {{fontSize: 11, fontWeight: "700", color: " #64748b", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16}}> Facility Hours </Text>
+        <ScrollView contentContainerStyle = {{padding : 16, paddingBottom: 40}}>
+        <Text style = {{fontSize: 11, fontWeight: "700", color: "#64748b", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16}}> Facility Hours </Text>
         <HoursCard
         title = "ARC"
-        hoursMap = {ARC_HOURS}
+        hoursMap = {Open_Hours_GYM}
         isLive = {true}/>
         <HoursCard
         title = "Rock Climbing Wall"
-        hoursMap = {CLIMBING_HOURS}
+        hoursMap = {Open_Hours_GYM}
         isLive = {true}/>
         <HoursCard
         title = "Shake Smart"
         hoursMap = {shakeSmartHours}
         isLive = {false}/>
 
-        <View style = {{marginTop: 8, backgroundColor: "rgba(56, 189, 248, 0, 0.05", borderWidth: 1, borderRadius: 10, padding: 12}}>
-            <Text style = {{fontSize: 11, color: " #475569", lineHeight: 16}}>
+        <View style = {{marginTop: 8, backgroundColor: "rgba(56, 189, 248, 0.05)", borderWidth: 1, borderColor: "rgba(56, 189, 248, 0.15)", borderRadius: 10, padding: 12}}>
+            <Text style = {{fontSize: 11, color: "#475569", lineHeight: 16}}>
                 ARC and Rock Climbing Wall Hours are based on the weekly schedule.
             </Text>
         </View>
         </ScrollView>
     )
 }
+
+export default function APP(){
+const[history, setHistory] = useState([]);
+const arcOpen = isArcOpen();
+const[activeTab, setActiveTab] = useState("Status");
+const[shakeSmartHours, setShakeSmartHours] = useState(Open_Hours_SS);
+const[schedule, setSchedule] = useState(emptySchedule);
+const[showSchedule, setShowSchedule] = useState(false);
+const[data, setData] = useState([]);
+const[lastUpdated, setUpdated] = useState(null);
+const[error, setError] = useState(null);
+const [loading, setLoading] = useState(true);
+
+return( //Main app component that manages state and renders the header, main content based on active tab, and bottom tab bar. It also includes modals for schedule and shake smart hours.
+    <View style= {styles.container}>
+         <StatusBar style ="light" />
+          <View style={styles.header}>
+            <View style = {{flexDirection: "row", alignItems: "center", gap: 10}}>
+                <View style = {{width: 8, height: 8, borderRadius: 4, backgroundColor: arcOpen ? "#34d399" : "#f87171"}} />
+                <Text style = {{fontWeight: "700", fontSize: 15, color: "#e2e8f0",}}> ARC Crowd Measure</Text>
+                <View style = {{paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20, backgroundColor: arcOpen ? "rgba(52, 211, 153, 0.1)" : "rgba(248, 113, 113, 0.08)", borderWidth: 1, borderColor: arcOpen ? "rgba(52, 211, 153, 0.2)" : "rgba(248, 113, 113, 0.15)"}}>
+                <Text style = {{fontSize: 10, fontWeight: "600", letterSpacing: 0.8, color: arcOpen ? "#34d399" : "#f87171"}}> {arcOpen ? "OPEN" : "CLOSED"}</Text>
+                </View>
+            </View>
+          </View>
+          {activeTab === "Status" && (
+            <StatusScreen
+              data={data}
+              history={history}
+              loading={loading}
+              error={error}
+              arcOpen={arcOpen}
+              schedule={schedule}
+              setShowSchedule={setShowSchedule}
+            />
+          )}
+          {activeTab === "Count" && (
+            <CountScreen data={data} loading={loading} error={error} />
+          )}
+          {activeTab === "Hours" && (
+            <HoursScreen shakeSmartHours={shakeSmartHours} />
+          )}
+          <View style={styles.Barsize}>
+            {["Status", "Count", "Hours"].map(tab => (
+              <TouchableOpacity key={tab} style={styles.tabs} onPress={() => setActiveTab(tab)}>
+                <Text style={{ fontSize: 12, color: activeTab === tab ? "#38bdf8" : "#475569" }}>{tab}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <ScheduleModal
+            visible={showSchedule}
+            schedule={schedule}
+            onSave={setSchedule}
+            onClose={() => setShowSchedule(false)}
+            history={history}
+          />
+    </View>
+);
 }
