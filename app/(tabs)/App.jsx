@@ -380,8 +380,13 @@ const[history, setHistory] = useState([]);
 const arcOpen = isArcOpen();
 const[activeTab, setActiveTab] = useState("Status");
 const[shakeSmartHours, setShakeSmartHours] = useState(Open_Hours_SS);
-const busyBlocks= Object.values(schedule).reduce((s,b) => s+b.length, 0);
-const[schedule, setSchedule] = useState(emptySchedule());
+const[schedule, setSchedule] = useState(emptySchedule);
+const[showSchedule, setShowSchedule] = useState(false);
+const[data, setData] = useState([]);
+const[lastUpdated, setUpdated] = useState(null);
+const[error, setError] = useState(null);
+const [loading, setLoading] = useState(true);
+
 // return(
 //     <View style= {styles.container}>
 //         <StatusBar style ="light" />
@@ -830,17 +835,14 @@ function HoursScreen({shakeSmartHours}) {
         <Text style = {{fontSize: 11, fontWeight: "700", color: " #64748b", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16}}> Facility Hours </Text>
         <HoursCard
         title = "ARC"
-        emojis = "🏋️"
         hoursMap = {ARC_HOURS}
         isLive = {true}/>
         <HoursCard
         title = "Rock Climbing Wall"
-        emojis = "🧗"
         hoursMap = {CLIMBING_HOURS}
         isLive = {true}/>
         <HoursCard
         title = "Shake Smart"
-        emojis = "🥤"
         hoursMap = {shakeSmartHours}
         isLive = {false}/>
 
