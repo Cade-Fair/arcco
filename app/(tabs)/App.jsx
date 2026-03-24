@@ -257,7 +257,7 @@ secondHeader:{
 },
 });
 
-//Main Screen that dipslays ARC gym status, crowd level, and usage trends
+//Main Screen that displays ARC gym status, crowd level, and usage trends
 function StatusScreen({ data, history, loading, error, arcOpen, schedule, setShowSchedule}) {
     //Animated screen fade-in
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -266,9 +266,9 @@ function StatusScreen({ data, history, loading, error, arcOpen, schedule, setSho
     }, [loading]);
     
     const locs = data.filter(l => l.FacilityName === "ARC"); //gets only ARC locations
-    const openLocs = locs.filter(l => !l.isClosed); //keeps only open locations
+    const openLocs = locs.filter(l => !l.IsClosed); //keeps only open locations
     const overallPct = openLocs.length // Calculate average occupancy percentage across all open ARC locations
-        ? Math.round(openLocs.reduce((s, l) => s (l.TotalCapacity > 0 ? (l.LastCount / l.TotalCapacity) * 100 : 0), 0) / openLocs.length)
+        ? Math.round(openLocs.reduce((s, l) => s + (l.TotalCapacity > 0 ? (l.LastCount / l.TotalCapacity) * 100 : 0), 0) / openLocs.length)
         : 0;
     const crowd = getCrowd(arcOpen ? overallPct : null); //determines crowd level based on occupancy
 
@@ -277,14 +277,14 @@ function StatusScreen({ data, history, loading, error, arcOpen, schedule, setSho
 
     const totalBusyBlocks = Object.values(schedule).reduce((s, b) => s + b.length, 0);
     const todaySuggestions = computeSuggestions(history, schedule, false).filter(s => s.day === new Date().getDay());
-    const bestToday = todaySuggestions [0];
+    const bestToday = todaySuggestions[0];
     // above is computing best times to visit today based on past history and schedule
 
     if (loading) { // Shows the loading spinner while fetching data
         return (
             <View style={{flex: 1, alignItems: "center", justifyContent: "center", gap: 14}}>
                 <ActivityIndicator size="large" color="#38bdf8" />
-                <Text style={{ fontSize: 13, color: "#334155" }}>Loading live data..</Text>
+                <Text style={{ fontSize: 13, color: "#334155" }}>Loading live data...</Text>
             </View>
         );
     }
@@ -295,13 +295,13 @@ function StatusScreen({ data, history, loading, error, arcOpen, schedule, setSho
             {/*Best time banner to display best time to visit based on data*/} 
             {totalBusyBlocks > 0 && bestToday && (
                 <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "rgba(56,189,248,.07)", borderWidth: 1, borderColor: "rgba(56,189,248,.2)", borderRadius: 12, padding: 14, marginBottom: 14 }}>
-                    <View style={{ flexDirections: "row", alignItems: "center", gap: 8, flex: 1}}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1}}>
                         <Text style={{ fontSize: 16 }}>✨</Text>
                         <Text style={{ fontSize: 12, fontWeight: "600", color: "#38bdf8" }}>
                             Best time today:{" "}
                             <Text style={{ color: "#94a3b8", fontWeight: "400" }}>{fmtHour(bestToday.hour)} - {fmtHour(bestToday.hour + 1)}</Text>
                             {bestToday.crowdPct !==null && (
-                                <Text style ={{ color: getCrowd(bestToday.crowdPct),color }}> ~{Math.round(bestToday.crowdPct)}% full</Text>
+                                <Text style={{ color: getCrowd(bestToday.crowdPct).color }}> ~{Math.round(bestToday.crowdPct)}% full</Text>
                             )}
                         </Text>
                     </View>
@@ -346,7 +346,7 @@ function StatusScreen({ data, history, loading, error, arcOpen, schedule, setSho
                 </View>
             </View>
 
-            {/* Timeline to show past data (every 5 mins)*/}
+            {/* Timeline to show past data (every 5 minutes)*/}
             <View style={{ backgroundColor: "rgba(255,255,255,.02)", borderWidth: 1, borderColor: "rgba(255,255,255,.05)", borderRadius: 16, padding: 16, marginBottom: 16 }}>
                 <Text style={{ fontSize: 10, color: "#334155", letterSpacing: 1.5, marginBottom: 12, textTransform: "uppercase" }}>
                     Today's Timeline · {history.length} Snapshot{history.length !== 1 ? "s" : ""} Collected
@@ -357,10 +357,22 @@ function StatusScreen({ data, history, loading, error, arcOpen, schedule, setSho
                 )}
             </View>
 
+            {/* ARC Floor 1 & 2 cards */}
+            {/* Renders individual cards for Floor 1 and Floor 2*/}
+            <Text style={{ fontSize: 11, fontWeight: "700", color: "#64748b", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12 }}>ARC Floors</Text>
+            {arcFloors.length > 0
+                ? arcFloors.map(loc => <LocationCard key={loc.LocationId || loc.LocationName} loc={loc} />)
+                : <Text style={{ color: "#334155", fontSize: 13, marginBottom: 12 }}>No floor data available.</Text>
+            }
 
+            {error && (
+                <View style ={{ marginTop: 8, backgroundColor: "rgba(248,113,113,.07)", borderWidth: 1, borderColor: "rgba(248,113,113,.18)", borderRadius: 10, padding: 12 }}>
+                    <Text style={{ color: "#fca5a5", fontSize: 12 }}>⚠ {error}</Text>
+                </View>
+            )} 
+            {/* Shows an error message if data fetch fails*/}
         </Animated.ScrollView>
     );
-    
 }
 
 export default function APP(){
