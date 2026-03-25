@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, ImageBackground, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 // all nesscsary imports for UI and frontend 
 
 
@@ -536,6 +536,12 @@ function StatusScreen({ data, history, loading, error, arcOpen, schedule, setSho
 
     return (
         // Main scrollable screen w fade-in animation
+                <ImageBackground
+            source={require("../../assets/images/background2.png")}
+            style={{ flex: 1 }}
+            imageStyle={{ opacity: 0.55 }}
+        >
+        <Animated.ScrollView style={{ flex: 1, opacity: fadeAnim }} contentContainerStyle={{ padding: 16, paddingBottom: 40}}> 
         <Animated.ScrollView style={{ flex: 1, opacity: fadeAnim }} contentContainerStyle={{ padding: 16, paddingBottom: 40}}> 
             {/*Best time banner to display best time to visit based on data*/} 
             {totalBusyBlocks > 0 && bestToday && (
@@ -640,6 +646,8 @@ function StatusScreen({ data, history, loading, error, arcOpen, schedule, setSho
             )} 
             {/* Shows an error message if data fetch fails*/}
         </Animated.ScrollView>
+        </Animated.ScrollView>
+        </ImageBackground>
     );
 }
 
@@ -1252,6 +1260,12 @@ return( //Main app component that manages state and renders the header, main con
             onClose={() => setShowSchedule(false)}
             history={history}
           />
+                <ImageBackground
+        source={require("../../assets/images/background.png")}
+        style={styles.heroHeader}
+        imageStyle={{ opacity: 0.55 }}
+      >
+      </ImageBackground>
     </View>
 );
 
