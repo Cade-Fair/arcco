@@ -202,6 +202,19 @@ function HoursCard({ title, emoji, hoursMap, isLive, onEdit }) {
   );
 }
 
+// Segment Bar
+function SegmentBar({ pct, color, height = 16 }) {
+  const total  = 20;
+  const filled = Math.round((pct / 100) * total);
+  return (
+    <View style={{ flexDirection: "row", gap: 3 }}>
+      {Array.from({ length: total }).map((_, i) => (
+        <View key={i} style={{ flex: 1, height, borderRadius: 3, backgroundColor: i < filled ? color : "rgba(0,0,0,0.1)" }} />
+      ))}
+    </View>
+  );
+}
+
 // Algorithm to suggest best times to get to ARC
 function computeSuggestions(history, schedule, allowEarlyLate = false) {
   const REASONABLE_START = 8;
@@ -241,6 +254,135 @@ function computeSuggestions(history, schedule, allowEarlyLate = false) {
 const Arc_sections = [{
 name: "ARC", locations: [
     "ARC Floor 1", "ARC Floor 2", "ARC Olympic Gym", "ARC Courts"],},]
+
+const ROOM_NAME_MAP = {
+  "ARC Floor 1": "ARC Floor 1",
+  "ARC Floor 2": "ARC Floor 2",
+
+  "Climbing Wall": "Climbing Wall",
+  "Climbing": "Climbing (Closed Area)",
+
+  "ARC Olympic Lifting Zones": "Olympic Lifting",
+  "South Court": "South Court",
+  "4 Court Gym": "4 Court Gym",
+  "North Court": "North Court",
+
+  "ARC Express": "ARC Express",
+
+  "Aquaplex Pool Deck": "Pool Deck",
+  "Competition Pool": "Competition Pool",
+  "Recreation Pool": "Recreation Pool",
+
+  "Spa": "Spa",
+  "Tennis Courts": "Tennis Courts",
+};
+
+const SAMPLE_DATA = [
+  {
+    FacilityName: "ARC",
+    LocationName: "ARC Floor 1",
+    LocationId: "arc-floor-1",
+    IsClosed: false,
+    LastCount: 133,
+    TotalCapacity: 198,
+  },
+  {
+    FacilityName: "ARC",
+    LocationName: "ARC Floor 2",
+    LocationId: "arc-floor-2",
+    IsClosed: false,
+    LastCount: 99,
+    TotalCapacity: 130,
+  },
+  {
+    FacilityName: "ARC",
+    LocationName: "Climbing Wall",
+    LocationId: "climbing-wall",
+    IsClosed: false,
+    LastCount: 22,
+    TotalCapacity: 100,
+  },
+  {
+    FacilityName: "ARC",
+    LocationName: "ARC Olympic Lifting Zones",
+    LocationId: "olympic-lifting",
+    IsClosed: false,
+    LastCount: 45,
+    TotalCapacity: 150,
+  },
+  {
+    FacilityName: "ARC",
+    LocationName: "South Court",
+    LocationId: "south-court",
+    IsClosed: false,
+    LastCount: 2,
+    TotalCapacity: 50,
+  },
+  {
+    FacilityName: "ARC",
+    LocationName: "4 Court Gym",
+    LocationId: "4-court-gym",
+    IsClosed: false,
+    LastCount: 22,
+    TotalCapacity: 367,
+  },
+  {
+    FacilityName: "ARC",
+    LocationName: "North Court",
+    LocationId: "north-court",
+    IsClosed: false,
+    LastCount: 3,
+    TotalCapacity: 100,
+  },
+  {
+    FacilityName: "ARC",
+    LocationName: "ARC Express",
+    LocationId: "arc-express",
+    IsClosed: false,
+    LastCount: 25,
+    TotalCapacity: 100,
+  },
+  {
+    FacilityName: "Aquatics",
+    LocationName: "Aquaplex Pool Deck",
+    LocationId: "pool-deck",
+    IsClosed: false,
+    LastCount: 5,
+    TotalCapacity: 167,
+  },
+  {
+    FacilityName: "Aquatics",
+    LocationName: "Competition Pool",
+    LocationId: "competition-pool",
+    IsClosed: false,
+    LastCount: 5,
+    TotalCapacity: 71,
+  },
+  {
+    FacilityName: "Aquatics",
+    LocationName: "Recreation Pool",
+    LocationId: "recreation-pool",
+    IsClosed: false,
+    LastCount: 3,
+    TotalCapacity: 150,
+  },
+  {
+    FacilityName: "Aquatics",
+    LocationName: "Spa",
+    LocationId: "spa",
+    IsClosed: false,
+    LastCount: 10,
+    TotalCapacity: 20,
+  },
+  {
+    FacilityName: "Outdoor",
+    LocationName: "Tennis Courts",
+    LocationId: "tennis-courts",
+    IsClosed: true,
+    LastCount: 0,
+    TotalCapacity: 0,
+  },
+];
 
 //layout/ general UI colors 
 const styles = StyleSheet.create({
@@ -412,8 +554,30 @@ function StatusScreen({ data, history, loading, error, arcOpen, schedule, setSho
                         <Text style={{ fontSize: 11, color: "#38bdf8", textDecorationLine: "underline" }}>See all →</Text>
                     </TouchableOpacity>
                     </View>
-            )}
-            
+        )}
+
+        {/* Edit Schedule Button */}
+        <TouchableOpacity
+          onPress={() => setShowSchedule(true)}
+          style={{
+            alignSelf: "flex-start",
+            paddingVertical: 10,
+            paddingHorizontal: 14,
+            borderRadius: 10,
+            backgroundColor: "rgba(56,189,248,.12)",
+            borderWidth: 1,
+            borderColor: "rgba(56,189,248,.3)",
+            marginBottom: 14
+          }}
+        >
+          <Text style={{ color: "#38bdf8", fontSize: 13, fontWeight: "600" }}>
+            Edit Schedule
+          </Text>
+        </TouchableOpacity>
+
+
+
+
             {/* Big meter used to display current occupancy percent or closed status*/}
             <View style={{ backgroundColor: arcOpen ? crowd.bg : "rgba(255,255,255,.02)", borderWidth: 1, borderColor: arcOpen ? crowd.color + "28" : "rgba(255,255,255,.05)", borderRadius: 20, padding: 22, marginBottom: 14 }}>
                 <View>
@@ -869,6 +1033,31 @@ function LocationCard({loc}) {
         </View>
     );
 }
+// Allows the "Counts" page to be used
+function FacilitySection({ name, locs }) {
+  const openLocs    = locs.filter(l => !l.IsClosed);
+  const facilityPct = openLocs.length ? Math.round(openLocs.reduce((s, l) => s + (l.TotalCapacity > 0 ? (l.LastCount / l.TotalCapacity) * 100 : 0), 0) / openLocs.length) : null;
+  const crowd       = getCrowd(facilityPct);
+  const totalPeople = openLocs.reduce((s, l) => s + l.LastCount, 0);
+  return (
+    <View style={{ marginBottom: 28 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 }}>
+        <Text style={{ fontSize: 11, fontWeight: "700", color: "#e2e8f0", letterSpacing: 1.5, textTransform: "uppercase" }}>{name}</Text>
+        <View style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.1)" }} />
+        {facilityPct !== null && (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <Text style={{ fontSize: 11, color: "#94a3b8" }}>{totalPeople} people</Text>
+            <Text style={{ fontSize: 12, fontWeight: "700", color: crowd.color }}>{facilityPct}%</Text>
+          </View>
+        )}
+      </View>
+      {locs.map(loc => <LocationCard key={loc.LocationId || loc.LocationName} loc={loc} />)}
+    </View>
+  );
+}
+
+
+
 function CountScreen({data, loading, error}) {
     const fadeAnim = useRef(new Animated.Value(0)).current;
     useEffect(() => {
@@ -950,6 +1139,76 @@ const[lastUpdated, setUpdated] = useState(null);
 const[error, setError] = useState(null);
 const [loading, setLoading] = useState(false);
 
+useEffect(() => {
+  const now = new Date();
+  const mockHistory = [];
+
+  for (let i = 0; i < 20; i++) {
+    const timestamp = new Date(now.getTime() - i * 5 * 60 * 1000);
+
+    mockHistory.push({
+      timestamp,
+      data: [
+        {
+          LocationName: "ARC Floor 1",
+          TotalCapacity: 200,
+          LastCount: Math.floor(Math.random() * 200),
+          IsClosed: false
+        },
+        {
+          LocationName: "ARC Floor 2",
+          TotalCapacity: 150,
+          LastCount: Math.floor(Math.random() * 150),
+          IsClosed: false
+        }
+      ]
+    });
+  }
+
+  setHistory(mockHistory);
+  setData(SAMPLE_DATA);
+}, []);
+
+
+useEffect(() => {
+  const mockSchedule = emptySchedule();
+
+  // Example: busy Monday 10–12 and 3–5
+  mockSchedule[1] = [
+    { start: 10, end: 12 },
+    { start: 15, end: 17 }
+  ];
+
+  // Example: busy today
+  const today = new Date().getDay();
+  mockSchedule[today] = [
+    { start: 13, end: 15 }
+  ];
+
+  setSchedule(mockSchedule);
+}, []);
+
+
+useEffect(() => {
+  const mockSchedule = emptySchedule();
+
+  // Example: busy Monday 10–12 and 3–5
+  mockSchedule[1] = [
+    { start: 10, end: 12 },
+    { start: 15, end: 17 }
+  ];
+
+  // Example: busy today
+  const today = new Date().getDay();
+  mockSchedule[today] = [
+    { start: 13, end: 15 }
+  ];
+
+  setSchedule(mockSchedule);
+}, []);
+
+
+
 return( //Main app component that manages state and renders the header, main content based on active tab, and bottom tab bar. It also includes modals for schedule and shake smart hours.
     <View style= {styles.container}>
          <StatusBar style ="light" />
@@ -995,4 +1254,5 @@ return( //Main app component that manages state and renders the header, main con
           />
     </View>
 );
+
 }
